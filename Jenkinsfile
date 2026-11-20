@@ -11,9 +11,6 @@ pipeline {
     options {
         timestamps()
         disableConcurrentBuilds()
-        buildDiscarder(logRotator(
-            numToKeepStr: '10'
-        ))
     }
 
     stages {
@@ -21,56 +18,41 @@ pipeline {
         // 1. Checkout GitHub Repository
         stage('Checkout') {
             steps {
-                echo "Building branch: ${env.BRANCH_NAME}"
-                checkout scm
+                echo 'Checking out Employee Management repository'
+
+                git branch: 'main',
+                    url: 'https://github.com/sowmyataraka/EmployeeManagement.git'
             }
         }
 
-        // 2. Compile application - all branches
+        // 2. Compile Application
         stage('Compile') {
             steps {
                 echo 'Compiling Employee Management application'
+
                 sh 'mvn -B clean compile'
             }
         }
 
-        // 3. Unit testing - all branches
+        // 3. Unit Testing - JUnit and Mockito
         stage('Unit Testing') {
             steps {
                 echo 'Running EmployeeServiceTest'
+
                 sh 'mvn -B -Dtest=EmployeeServiceTest test'
             }
         }
 
-        // 4. Integration testing - develop and above
-        stage('API Integration Testing') {
-            when {
-                anyOf {
-                    branch 'develop'
-                    branch 'release/*'
-                    branch 'main'
-                    branch 'hotfix/*'
-                }
-            }
-            steps {
-                echo 'Integration testing stage'
-
-                // Replace this command when integration tests
-                // have been implemented.
-                echo 'Integration tests are not implemented yet'
-            }
-        }
-
-        // 5. Full test suite - develop and above
+        // 4. API Integration Testing - Spring Boot
+       
+stage('API Integration Testing') {
+    steps {
+        echo 'API integration tests are not implemented yet - skipping'
+    }
+}
+    
+        // 5. Full Test Suite
         stage('Full Test Suite') {
-            when {
-                anyOf {
-                    branch 'develop'
-                    branch 'release/*'
-                    branch 'main'
-                    branch 'hotfix/*'
-                }
-            }
             steps {
                 echo 'Running all unit and integration tests'
 
@@ -80,28 +62,15 @@ pipeline {
 
         // 6. Package Spring Boot JAR
         stage('Package Application') {
-            when {
-                anyOf {
-                    branch 'release/*'
-                    branch 'main'
-                    branch 'hotfix/*'
-                }
-            }
             steps {
                 echo 'Packaging Employee Management application'
+
                 sh 'mvn -B package -DskipTests'
             }
         }
 
         // 7. Archive JAR
         stage('Archive Application') {
-            when {
-                anyOf {
-                    branch 'release/*'
-                    branch 'main'
-                    branch 'hotfix/*'
-                }
-            }
             steps {
                 archiveArtifacts(
                     artifacts: 'target/*.jar',
@@ -123,16 +92,16 @@ pipeline {
         }
 
         success {
-            echo "SUCCESS: Pipeline completed for ${env.BRANCH_NAME}"
+            echo 'SUCCESS: Employee Management pipeline completed!'
         }
 
         failure {
-            echo "FAILURE: Pipeline failed for ${env.BRANCH_NAME}"
-            echo 'Check Jenkins console output and test reports.'
+            echo 'FAILURE: Please check Jenkins console output and test reports.'
         }
 
         cleanup {
-            echo 'Pipeline execution completed.'
+            echo 'Employee Management pipeline execution completed.'
         }
     }
 }
+
