@@ -11,22 +11,24 @@ pipeline {
     options {
         timestamps()
         disableConcurrentBuilds()
-        buildDiscarder(logRotator(
-            numToKeepStr: '10'
-        ))
+        skipDefaultCheckout(true)
+        buildDiscarder(logRotator(numToKeepStr: '10'))
     }
 
     stages {
 
-        // 1. Checkout GitHub Repository
+        // 1. Checkout the branch or PR revision detected by Jenkins
         stage('Checkout') {
             steps {
-                echo "Building branch: ${env.BRANCH_NAME}"
+                echo "Branch: ${env.BRANCH_NAME}"
+                echo "Pull Request ID: ${env.CHANGE_ID ?: 'Not a PR'}"
+                echo "PR Target: ${env.CHANGE_TARGET ?: 'N/A'}"
+
                 checkout scm
             }
         }
 
-        // 2. Compile application - all branches
+        // 2. Compile on every branch and PR
         stage('Compile') {
             steps {
                 echo 'Compiling Employee Management application'
@@ -34,7 +36,7 @@ pipeline {
             }
         }
 
-        // 3. Unit testing - all branches
+        // 3. Unit tests on every branch and PR
         stage('Unit Testing') {
             steps {
                 echo 'Running EmployeeServiceTest'
@@ -69,11 +71,11 @@ pipeline {
                     branch 'release/*'
                     branch 'main'
                     branch 'hotfix/*'
+                    changeRequest()
                 }
             }
             steps {
-                echo 'Running all unit and integration tests'
-
+                echo 'Running complete unit and integration test suite'
                 sh 'mvn -B test'
             }
         }
